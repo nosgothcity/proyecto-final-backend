@@ -1,28 +1,29 @@
-const Router = require('express');
-const router = Router();
-const ProductManager = require('../functions/ProductManager');
-const productsManager = new ProductManager();
+const express = require('express');
+const router = express.Router();
+const io = require('socket.io')();
 
+const ProductsManagerMongo = require('../dao/controllers/products');
+const productsManagerMongo = new ProductsManagerMongo();
 
 router.get('/', async (req, res) => {
-    let allProducts = await productsManager.getProducts();
+    let products;
     const limit = parseInt(req.query.limit, 10);
-
-    if(!limit || limit < 0 || isNaN(limit) || limit > allProducts.length){
-        return res.send(allProducts);
+    if(!limit || limit < 0 || isNaN(limit)){
+        products = await productsManagerMongo.getProductsWithLimit(limit);
+    } else {
+        products = await productsManagerMongo.getProducts();
     }
 
-    allProducts.length = limit;
-    res.send(allProducts);
+    res.status(200).send(products);
 });
 
 router.get('/:pid', async (req, res) => {
     const productId = req.params.pid;
     if(!productId){
-        return res.status(400).send({status: 'error', message: 'Product Id not valid'});
+        return res.status(400).send({status: 'error', message: 'Invalid parameter...'});
     }
 
-    const product = await productsManager.getProductById(productId);
+    const product = await productsManagerMongo.getProductsByParameter({_id: `${productId}`});
     if(product){
         return res.send(product);
     } else {
@@ -32,34 +33,52 @@ router.get('/:pid', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const newProduct = req.body;
-    const response = await productsManager.addProduct(newProduct);
+    const product = [];
+    const title = newProduct?.title??'';
+    const description = newProduct?.description??'';
+    const code = newProduct?.code??'';
+    const price = newProduct?.price??0;
+    const stock = newProduct?.stock??0;
+    const category = newProduct?.category??'';
 
-    if(response){
-        if(response.status === 'error'){
-            return res.status(400).send({status: response.status, message: response.message});
-        }
-        return res.send({status: response.status, message: response.message});
+    if(title.length === 0 || description.length === 0 || code.length === 0 || price === 0 || stock === 0 || category.length === 0){
+        return res.status(400).send({ error: "Incomplete values" });
+    }
+
+    product.push({
+        title       : newProduct.title,
+        description : newProduct.description,
+        code        : newProduct.code,
+        price       : newProduct.price,
+        status      : true,
+        stock       : newProduct.stock,
+        category    : newProduct.category,
+        thumbnail   : newProduct.thumbnail??'none',
+    });
+
+    const checkProduct = await productsManagerMongo.getProductsByParameter({code: `${code}`});
+
+    if(!checkProduct){
+        productsManagerMongo.createProduct(product);
+        res.status(200).send({ success: "Product created" });
     } else {
-        return res.send({status: 'error', message: 'service not available'});
+        return res.status(400).send({ error: "Product already exist..." });
     }
 });
 
 router.put('/:pid', async (req, res) => {
-    const product = req.body;
+    const data = req.body;
     const id = req.params.pid;
+
     if(!id){
         return res.status(400).send({status: 'error', message: 'Product Id not valid'});
     }
-
-    const response = await productsManager.updateProduct(id, product);
+    const response = await productsManagerMongo.updateProduct(id, data);
 
     if(response){
-        if(response.status === 'error'){
-            return res.status(400).send({status: response.status, message: response.message});
-        }
-        return res.send({status: response.status, message: response.message});
+        return res.status(200).send({status: 'done', message: 'Product updated'});
     } else {
-        return res.send({status: 'error', message: 'service not available'});
+        return res.status(400).send({status: 'error', message: 'Product not found'});
     }
 });
 
@@ -69,15 +88,12 @@ router.delete('/:pid', async (req, res) => {
         return res.status(400).send({status: 'error', message: 'Product Id not valid'});
     }
 
-    const response = await productsManager.deleteProduct(id);
+    const response = await productsManagerMongo.deleteProduct(id);
 
     if(response){
-        if(response.status === 'error'){
-            return res.status(400).send({status: response.status, message: response.message});
-        }
-        return res.send({status: response.status, message: response.message});
+        return res.status(200).send({status: 'done', message: 'Product deleted'});
     } else {
-        return res.send({status: 'error', message: 'service not available'});
+        return res.status(400).send({status: 'error', message: 'Product not found'});
     }
 });
 

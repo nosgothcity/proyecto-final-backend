@@ -1,0 +1,80 @@
+<div class="container p-4">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-md4 mx-auto">
+            <h2>Lista de productos dinamica</h2>
+            <div>
+                <div class="form-group">
+                    <label for="info">Ingrese los datos de un producto...</label>
+                </div>
+                <div class="form-group">
+                    <label for="title">Nombre:</label>
+                    <input type="text" class="form-control" id="product-title" aria-describedby="emailHelp" placeholder="Nombre del producto...">
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción</label>
+                    <input type="text" class="form-control" id="description" placeholder="Descripción del producto...">
+                </div>
+                                <div class="form-group">
+                    <label for="code">Codigo</label>
+                    <input type="text" class="form-control" id="code" placeholder="Código del productos...">
+                </div>
+                <div class="form-group">
+                    <label for="price">Precio</label>
+                    <input type="number" class="form-control" id="price" placeholder="Precio del producto...">
+                </div>
+                <div class="form-group">
+                    <label for="stock">Stock</label>
+                    <input type="number" class="form-control" id="stock" placeholder="Stock del producto...">
+                </div>
+                <div class="form-group">
+                    <label for="category">Categoria</label>
+                    <input type="text" class="form-control" id="category" placeholder="Categoria del producto...">
+                </div>
+                <div class="form-group">
+                    <label for="thumbnail">Imagen</label>
+                    <input type="text" class="form-control" id="thumbnail" placeholder="Url de la imagen del producto...">
+                </div>
+                <br>
+                <div>
+                    <button type="button" class="btn btn-primary" id="new-product">Agregar</button>
+                </div>
+            </div>
+            <hr/>
+            {{!-- <p id="log"></p> --}}
+            <div>
+                <table class="table" >
+                    <thead>
+                        <tr>
+                            <th scope="col">Id</th>
+                            <th scope="col">Titulo</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col">Codigo</th>
+                            <th scope="col">Precio</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Stock</th>
+                            <th scope="col">Categoria</th>
+                            <th scope="col">-</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-rows">
+                        {{#each products}}
+                            <tr id="product-{{this._id}}">
+                                <th scope="row">{{this._id}}</th>
+                                <td>{{this.title}}</td>
+                                <td>{{this.description}}</td>
+                                <td>{{this.code}}</td>
+                                <td>{{this.price}}</td>
+                                <td>{{this.status}}</td>
+                                <td>{{this.stock}}</td>
+                                <td>{{this.category}}</td>
+                                <td><button type="button" class="btn btn-danger" id={{this._id}} onClick="deleteProduct(this.id)">Eliminar</button></td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/realtimeproducts.js"></script>

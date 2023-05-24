@@ -51,7 +51,7 @@ class ProductManager {
             const found = products.some(product => product.code === code);
             if(found){
                 return {
-                    status: 'done',
+                    status: 'error',
                     message: 'Product already exists',
                 };
             }
@@ -74,6 +74,7 @@ class ProductManager {
                 return {
                     status: 'done',
                     message: 'Product added',
+                    id_product: id,
                 }
             })
             .catch((error) => {
