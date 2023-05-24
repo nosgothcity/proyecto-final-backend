@@ -15,12 +15,18 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http:///localhost:8080/api/products",
+							"raw": "http:///localhost:8080/api/products?limit=1",
 							"protocol": "http",
 							"path": [
 								"localhost:8080",
 								"api",
 								"products"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1"
+								}
 							]
 						}
 					},
@@ -32,13 +38,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http:///localhost:8080/api/products/1",
+							"raw": "http:///localhost:8080/api/products/646c65e3c5aec3d828a497dfa",
 							"protocol": "http",
 							"path": [
 								"localhost:8080",
 								"api",
 								"products",
-								"1"
+								"646c65e3c5aec3d828a497dfa"
 							]
 						}
 					},
@@ -51,7 +57,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"title\"       : \"TEST\",\r\n    \"description\" : \"TEST DECRIPCTION\",\r\n    \"code\"        : \"12345112\",\r\n    \"price\"       : 30000,\r\n    \"stock\"       : 5,\r\n    \"category\"    : \"TEST CATEGORY\",\r\n    \"thumbnail\"   : \"TEST IMG\"\r\n}",
+							"raw": "{\r\n    \"title\"       : \"TEST ITEM 9\",\r\n    \"description\" : \"TEST DECRIPCTION ITEM 9\",\r\n    \"code\"        : \"TEST9RODUCT\",\r\n    \"price\"       : 20000,\r\n    \"stock\"       : 10,\r\n    \"category\"    : \"TEST CATEGORY ITEM 9\",\r\n    \"thumbnail\"   : \"TEST IMG ITEM 9\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -59,12 +65,13 @@
 							}
 						},
 						"url": {
-							"raw": "http:///localhost:8080/api/products",
+							"raw": "http:///localhost:8080/api/products/",
 							"protocol": "http",
 							"path": [
 								"localhost:8080",
 								"api",
-								"products"
+								"products",
+								""
 							]
 						}
 					},
@@ -77,7 +84,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"title\": \"TEST TITLE ACTUALIZADO V5\"\r\n}",
+							"raw": "{\r\n    \"title\": \"TEST TITLE ACTUALIZADO ITEM 5\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -85,13 +92,13 @@
 							}
 						},
 						"url": {
-							"raw": "http:///localhost:8080/api/products/4",
+							"raw": "http:///localhost:8080/api/products/646c65e3c5aec3d828a497dfa",
 							"protocol": "http",
 							"path": [
 								"localhost:8080",
 								"api",
 								"products",
-								"4"
+								"646c65e3c5aec3d828a497dfa"
 							]
 						}
 					},
@@ -103,13 +110,13 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http:///localhost:8080/api/products/4",
+							"raw": "http:///localhost:8080/api/products/aasdasd",
 							"protocol": "http",
 							"path": [
 								"localhost:8080",
 								"api",
 								"products",
-								"4"
+								"aasdasd"
 							]
 						}
 					},
@@ -126,13 +133,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http:///localhost:8080/api/carts/3",
+							"raw": "http:///localhost:8080/api/carts/646d53eeea424593dd96d66f",
 							"protocol": "http",
 							"path": [
 								"localhost:8080",
 								"api",
 								"carts",
-								"3"
+								"646d53eeea424593dd96d66f"
 							]
 						}
 					},
@@ -143,6 +150,15 @@
 					"request": {
 						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"products\": \"none\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
 							"raw": "http:///localhost:8080/api/carts/",
 							"protocol": "http",
@@ -159,18 +175,27 @@
 				{
 					"name": "Add Product To Cart",
 					"request": {
-						"method": "POST",
+						"method": "PUT",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"quantity\": 3\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "http:///localhost:8080/api/carts/5/product/2",
+							"raw": "http:///localhost:8080/api/carts/646d57fb234dda4574a6caee/product/646d44ff7de7d92729429412",
 							"protocol": "http",
 							"path": [
 								"localhost:8080",
 								"api",
 								"carts",
-								"5",
+								"646d57fb234dda4574a6caee",
 								"product",
-								"2"
+								"646d44ff7de7d92729429412"
 							]
 						}
 					},
