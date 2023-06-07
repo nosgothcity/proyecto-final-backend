@@ -8,10 +8,20 @@ class ProductsManagerMongo {
         return result;
     }
 
-    async getProducts() {
+    async getProducts(limit, page, sort, dataQuery) {
         try {
-            const products = await productsModel.find({}).lean();
-            return  products;
+            const options = {
+                page,
+                limit,
+                sort,
+                customLabels: {
+                    docs: 'payload',
+                },
+                lean: true,
+                leanWithId: true,
+            };
+            const products = await productsModel.paginate(dataQuery, options);
+            return products;
         } catch (error) {
             console.error('Error al obtener los productos:', error);
             throw error;

@@ -6,15 +6,47 @@ const ProductsManagerMongo = require('../dao/controllers/products');
 const productsManagerMongo = new ProductsManagerMongo();
 
 router.get('/', async (req, res) => {
-    let products;
-    const limit = parseInt(req.query.limit, 10);
-    if(!limit || limit < 0 || isNaN(limit)){
-        products = await productsManagerMongo.getProductsWithLimit(limit);
-    } else {
-        products = await productsManagerMongo.getProducts();
+    const limit = req.query.limit??10;
+    const page = req.query.page??1;
+    const query = req.query.query??null;
+    const sort = req.query.sort??null;
+    let sortType;
+    let queryData;
+
+    if(sort && sort === 'desc'){
+        sortType = {price: -1};
+    }else if(sort && sort === 'asc'){
+        sortType = {price: 1};
+    }else{
+        sortType = {};
     }
 
-    res.status(200).send(products);
+    if(query){
+        try{
+            queryData = JSON.parse(query);
+        } catch (error) {
+            return res.status(400).send({status: 'error', message: 'Bad Request.'});
+        }
+    } else {
+        queryData = {};
+    }
+
+    const products = await productsManagerMongo.getProducts(limit, page, sortType, queryData);
+    if(products.payload.length > 0){
+        products.status = 'success';
+        if(products.prevPage){
+            products.prevPage = `http://localhost:8080/api/products?page=${products.prevPage}`
+        }
+        if(products.nextPage){
+            products.nextPage = `http://localhost:8080/api/products?page=${products.nextPage}`
+        }
+    } else {
+        products.status = 'error';
+        products.prevPage = null;
+        products.nextPage = null;
+    }
+
+    return res.status(200).send(products);
 });
 
 router.get('/:pid', async (req, res) => {

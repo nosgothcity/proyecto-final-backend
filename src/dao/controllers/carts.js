@@ -3,8 +3,8 @@ const cartsModel = require('../models/carts');
 class CartsManagerMongo {
     constructor() {}
 
-    async createCart(cart) {
-        const result = await cartsModel.create(cart)
+    async createCart(data) {
+        const result = await cartsModel.create(data)
         .then(response => {
             console.log('Carro creado');
             return true;
@@ -17,7 +17,7 @@ class CartsManagerMongo {
     }
 
     async getCartById(cartId) {
-        const product = await cartsModel.findById(cartId).lean()
+        const product = await cartsModel.findById(cartId).populate('products.product').lean()
             .catch(err => {
                 console.log('Carro no encontrado');
                 return false;
@@ -25,7 +25,7 @@ class CartsManagerMongo {
         return product;
     }
 
-    async addProductToCart(id, data){
+    async updateProductToCart(id, data){
         const updateCart = await cartsModel.findByIdAndUpdate(id, data, { new: true })
             .then(response => {
                 console.log('Carro actualizado');

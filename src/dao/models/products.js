@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const dataBaseConnect = require('./db')
+const mongoosePaginate = require('mongoose-paginate-v2');
+const dataBaseConnect = require('./db');
 
 const collection = 'Products';
 
@@ -38,6 +39,7 @@ const schema = new mongoose.Schema({
     },
 });
 
+schema.plugin(mongoosePaginate);
 schema.statics.createProduct = async function (product, req) {
     try {
         const newProduct = new this(product);

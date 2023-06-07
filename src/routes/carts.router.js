@@ -20,7 +20,24 @@ router.get('/:pid', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    const response = await cartsManager.createCart({products: 'none'});
+    const product = req.body.product;
+    const count = req.body.count;
+
+    const date = new Date().toISOString().split('T')[0];
+    const products = [];
+    const addProduct = {
+        date,
+    };
+
+    if(product && count && product !== ''){
+        products.push({
+            product,
+            count,
+        });
+        addProduct.products = products;
+    }
+
+    const response = await cartsManager.createCart(addProduct);
 
     if(response){
         return res.status(200).send({status: 'done', message: 'Cart created'});
@@ -32,8 +49,14 @@ router.post('/', async (req, res) => {
 router.put('/:cid/product/:pid', async (req, res) => {
     const cartId = req.params.cid;
     const productId = req.params.pid;
-    const quantity = req.body?.quantity??0;
-    const product = [];
+    const count = req.body?.count??0;
+
+    const products = [];
+    const date = new Date().toISOString().split('T')[0];
+    const addProduct = {
+        date,
+    };
+
     const cartData = await cartsManager.getCartById(cartId);
     const productData = await productsManagerMongo.getProductsByParameter({_id: `${productId}`});
 
@@ -41,16 +64,97 @@ router.put('/:cid/product/:pid', async (req, res) => {
         return res.status(400).send({status: 'error', message: 'CartId/ProductId not found'});
     }
 
-    product.push({
-        productId: `${productId}`,
-        quantity: quantity,
+    if(count === 0){
+        return res.status(400).send({status: 'error', message: 'Count must be more than 0'});
+    }
+
+    if(cartData.products.length > 0){
+        for (const product of cartData.products) {
+            products.push({
+                product: product.product._id.toString(),
+                count: product.count,
+            });
+        }    
+    }
+
+    products.push({
+        product: productId,
+        count,
     });
 
-    const data = JSON.stringify(product);
-    const response = await cartsManager.addProductToCart(cartId, {products: data});
+    addProduct.products = products;
+    const response = await cartsManager.updateProductToCart(cartId, addProduct);
 
     if(response){
         return res.status(200).send({status: 'done', message: 'Cart updated'});
+    } else {
+        return res.status(400).send({status: 'error', message: 'service not available'});
+    }
+});
+
+router.delete('/:cid/product/:pid', async (req, res) => {
+    const cartId = req.params.cid;
+    const productId = req.params.pid;
+
+    const products = [];
+    const date = new Date().toISOString().split('T')[0];
+    const addProduct = {
+        date,
+    };
+
+    const cartData = await cartsManager.getCartById(cartId);
+    const productData = await productsManagerMongo.getProductsByParameter({_id: `${productId}`});
+
+    if(!cartData || !productData){
+        return res.status(400).send({status: 'error', message: 'CartId/ProductId not found'});
+    }
+
+    const productIndex = cartData.products.findIndex(product => product.product._id.toString() === productId);
+
+    if (productIndex === -1) {
+        return res.status(400).send({status: 'error', message: 'ProductId not found in Cart'});
+    }
+
+    cartData.products.splice(productIndex, 1);
+    if(cartData.products.length > 0){
+        for (const product of cartData.products) {
+            products.push({
+                product: product.product._id.toString(),
+                count: product.count,
+            });
+        }
+    }
+
+    addProduct.products = products;
+    const response = await cartsManager.updateProductToCart(cartId, addProduct);
+
+    if(response){
+        return res.status(200).send({status: 'done', message: 'Cart updated'});
+    } else {
+        return res.status(400).send({status: 'error', message: 'service not available'});
+    }
+});
+
+router.delete('/:cid', async (req, res) => {
+    const cartId = req.params.cid;
+
+    const products = [];
+    const date = new Date().toISOString().split('T')[0];
+    const addProduct = {
+        date,
+    };
+
+    const cartData = await cartsManager.getCartById(cartId);
+
+    if(!cartData){
+        return res.status(400).send({status: 'error', message: 'CartId not found'});
+    }
+
+    addProduct.products = products;
+    const response = await cartsManager.updateProductToCart(cartId, addProduct);
+
+    if(response){
+        return res.status(200).send({status: 'done', message: 'Removed all products from cart'});
     } else {
         return res.status(400).send({status: 'error', message: 'service not available'});
     }

@@ -4,7 +4,8 @@ const { Server } = require('socket.io');
 
 const productsRouter = require('./routes/products.router.js');
 const cartsRouter = require('./routes/carts.router.js');
-const home = require('./routes/home.router.js');
+const productsList = require('./routes/productsList.router.js');
+const carts = require('./routes/cartsInfo.router.js');
 const realTimeProducts = require('./routes/realTimeProducts.router.js');
 const chat = require ('./routes/chat.router.js');
 
@@ -16,7 +17,8 @@ app.use(express.urlencoded({extended: true}));
 
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
-app.use('/home', home);
+app.use('/productsList', productsList);
+app.use('/carts', carts);
 app.use('/realtimeproducts', realTimeProducts);
 app.use('/chat', chat);
 
