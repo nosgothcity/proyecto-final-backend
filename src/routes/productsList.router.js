@@ -1,9 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const ProductsManagerMongo = require('../dao/controllers/products');
-const productsManagerMongo = new ProductsManagerMongo();
+const UserModel = require('../dao/controllers/user')
 
-router.get('/', async (req, res) => {
+const productsManagerMongo = new ProductsManagerMongo();
+const userManagerMongo = new UserModel();
+
+// Middleware de rutas publicas y privadas.
+const privateRoute = (req, res, next) => {
+    if (req.session.user) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+};
+
+const publicRoute = (req, res, next) => {
+    if (!req.session.user) {
+        next();
+    } else {
+        res.redirect('/profile');
+    }
+};
+
+router.get('/list', async (req, res) => {
     const limit = req.query.limit??10;
     const page = req.query.page??1;
     const query = req.query.query??null;
@@ -52,5 +72,58 @@ router.get('/', async (req, res) => {
         prevPage: products.prevPage,
     });
 });
+
+router.get('/', (req,res)=>{
+    res.render('home', { title: "Express" })
+});
+
+router.get('/login', (req, res) => {
+    res.render('login');
+});
+
+router.get('/profile', (req, res) => {
+    if (!req.session.user) {
+        res.redirect('/login');
+    } else {
+        const { firstname, lastname, email, age } = req.session.user;
+        res.render('profile', { firstname, lastname, email, age });
+    }
+});
+
+router.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    const loginUser = await userManagerMongo.getUserLogin({email, password});
+    console.log('result', loginUser);
+    if (!loginUser) {
+        res.redirect('/productsList/login');
+    } else {
+        req.session.user = user;
+        res.redirect('/productsList/list');
+    }
+});
+
+router.post('/register', async (req,res)=>{
+    const { firstname, lastname, email, age, password } = req.body;
+    
+    const userEx = await UserModel.findOne({email});
+    if( userEx ) {
+        console.error('Error, el usuario ya esta registrado');
+        res.redirect('/');
+    }
+    try {
+        const user = new UserModel({ firstname, lastname, email, age, password });
+        await user.save();
+        res.redirect('/login');
+    } catch (error) {
+        console.error('Error al registrar el usuario:', error);
+        res.redirect('/');
+    }
+});
+
 
 module.exports = router;
