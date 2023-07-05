@@ -1,25 +1,103 @@
-const addProductToCart = async (productId) => {
-    console.log('productId', productId)
-    const cart = '647fc1372b14059beb5aacf5';
+const socket = io();
+const tableBody = document.getElementById('result-rows');
+const addProductButton = document.getElementById("new-product");
+
+const sendData = async (productTitle, description, code, price, stock, category, thumbnail) => {
+    const dataToEmit = {
+        status: 'error',
+        productId: 0,
+    }
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    
-    const raw = JSON.stringify({
-      "count": 1
-    });
-    
-    const requestOptions = {
-      method: 'PUT',
-      headers: myHeaders,
-      body: raw,
-      redirect: 'follow'
+
+    const raw = {
+        "title": productTitle,
+        "description": description,
+        "code": code,
+        "price": price,
+        "stock": stock,
+        "category": category,
+        "thumbnail": thumbnail,
     };
-    
-    fetch(`http://localhost:8080/api/carts/${cart}/product/${productId}`, requestOptions)
-      .then(response => response.text())
-      .then(result => {
-        console.log(result);
-        alert('Articulo agregado a carrito');
-    })
-      .catch(error => console.log('error', error));
+
+    const requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: JSON.stringify(raw),
+        redirect: 'follow',
+    };
+
+    fetch("http://localhost:8080/api/products", requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            const data = {
+                status: result.status,
+                productId: result.productId,
+                data: raw,
+            }
+            console.log('result => ');
+            console.log(result);
+            if(data.status === 'done'){
+                console.log('Tratando de emitir a socket de actualizacion de html....');
+                socket.emit('data_list_update', data);
+            }
+        })
+        .catch(error => console.log('error', error));
 };
+
+const deleteProduct = async (productId) => {
+    const requestOptions = {
+        method: 'DELETE',
+        redirect: 'follow'
+    };
+
+    fetch(`http://localhost:8080/api/products/${productId}`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            const data = {
+                status: result.status,
+                productId,
+            }
+            if(data.status === 'done'){
+                socket.emit('data_list_delete', data);
+            }
+        })
+        .catch(error => console.log('error', error));
+};
+
+addProductButton.addEventListener("click", event => {
+    const productTitle = document.getElementById("product-title").value;
+    const description = document.getElementById("description").value;
+    const code = document.getElementById("code").value;
+    const price = document.getElementById("price").value;
+    const stock = document.getElementById("stock").value;
+    const category = document.getElementById("category").value;
+    const thumbnail = document.getElementById("thumbnail").value;
+    sendData(productTitle, description, code, price, stock, category, thumbnail)
+});
+
+socket.on('updateProducts', (message) => {
+    console.log('Agregando', message.data);
+    const htmlToAdd = `<tr id="product-${message.productId}">
+        <th scope="row" hidden>${message.productId}</th>
+        <td>${message.data.title}</td>
+        <td>${message.data.description}</td>
+        <td>${message.data.code}</td>
+        <td>${message.data.price}</td>
+        <td>true</td>
+        <td>${message.data.stock}</td>
+        <td>${message.data.category}</td>
+        <td><button type="button" class="btn btn-danger" id=${message.productId} onClick="">Eliminar</button></td>
+    </tr>`;
+    tableBody.innerHTML += htmlToAdd;
+});
+
+socket.on('deleteProduct', (message) => {
+    console.log('Eliminando', message.status);
+    const element = document.getElementById(`product-${message.productId}`);
+    element.remove();
+});
+
+// socket.on('addProductPost', (message) => {
+//     console.log('addProductPost', message);
+// });

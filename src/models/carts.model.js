@@ -1,10 +1,7 @@
-const mongoose = require('mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2');
-const dataBaseConnect = require('./db')
+import mongoose from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
 
-const collection = 'Carts';
-
-const schema = new mongoose.Schema({
+const cartSchema = new mongoose.Schema({
     products: {
         type: [
             {
@@ -25,7 +22,6 @@ const schema = new mongoose.Schema({
     }
 });
 
-schema.plugin(mongoosePaginate);
-const cartsModel = dataBaseConnect.model(collection, schema);
-
-module.exports = cartsModel;
+cartSchema.plugin(mongoosePaginate);
+const CartsModel = mongoose.model("Carts", cartSchema);
+export default CartsModel;

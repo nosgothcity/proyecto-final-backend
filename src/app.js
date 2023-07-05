@@ -1,53 +1,61 @@
-const express = require('express');
-const session = require('express-session')
-const { engine } = require('express-handlebars');
-const { Server } = require('socket.io');
+import express from 'express';
+import mongoose from 'mongoose';
+import handlebars from 'express-handlebars';
+import __dirname from './utils.js';
+import session from 'express-session';
+import passport from 'passport';
+import initializePassport from './config/passport.config.js'
+import flash from 'connect-flash';
+import { Server } from 'socket.io';
 
-const productsRouter = require('./routes/products.router.js');
-const cartsRouter = require('./routes/carts.router.js');
-const productsList = require('./routes/productsList.router.js');
-const carts = require('./routes/cartsInfo.router.js');
-const realTimeProducts = require('./routes/realTimeProducts.router.js');
-const chat = require ('./routes/chat.router.js');
+import viewsRouter from './routes/views.router.js';
+import sessionsRouter from './routes/session.router.js';
+import productsRouter from './routes/products.router.js';
+import chatRouter from './routes/chat.router.js';
+import cartsRouter from './routes/carts.router.js';
 
 const app = express();
-app.use(express.static(__dirname+'/public'))
 
+mongoose.connect(`mongodb+srv://coderhouse:coderhouse316@ecommerce.ovm7ngz.mongodb.net/?retryWrites=true&w=majority`, { dbName: 'ecommerce' });
+app.engine('handlebars', handlebars.engine());
+
+app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
-app.engine('handlebars', engine());
 app.set('views', __dirname + '/views');
-app.set('view engine', 'handlebars');
+app.set('view engine','handlebars');
 
 app.use(session({
     secret: 'fr3y43i6',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: false
 }));
 
+initializePassport();
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
+app.use('/', viewsRouter);
+app.use('/api/sessions', sessionsRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
-app.use('/productsList', productsList);
-app.use('/carts', carts);
-app.use('/realtimeproducts', realTimeProducts);
-app.use('/chat', chat);
+app.use('/chat', chatRouter);
 
-const server = app.listen(8080, () => console.log(`servidor escuchando en http://localhost:8080/`));
+const server = app.listen(8080, () => console.log(`Listening on PORT 8080`));
+
 const io = new Server(server);
 const messages = [];
 
 io.on('connection', socket => {
     socket.on('data_list_update', (data) => {
+        console.log('emitiendo a socket updateProducts....');
         io.emit('updateProducts', data);
     });
 
     socket.on("data_list_delete", data => {
         io.emit('deleteProduct', data);
-    });
-
-    socket.on("add_product_post", data => {
-        io.emit('addProductPost', data);
     });
 
     socket.on("message", data => {

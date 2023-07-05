@@ -1,7 +1,20 @@
-const express = require('express');
-const router = express.Router();
-const ChatsManager = require('../dao/controllers/chats');
-const chatsManager = new ChatsManager();
+import { Router } from 'express';
+import ChatModel from '../models/chats.model.js';
+
+const router = Router();
+
+const createMessage = async message => {
+    const result = await ChatModel.create(message)
+    .then(response => {
+        console.log('Nuevo mensaje creado');
+        return true;
+    })
+    .catch(err => {
+        console.log('Mensaje no creado');
+        return false;
+    });
+    return result;
+};
 
 router.get('/',(req,res)=>{
     res.render('chat');
@@ -20,7 +33,7 @@ router.post('/', async (req, res) => {
         user,
         message,
     });
-    const newMessage = chatsManager.newMessage(messageData);
+    const newMessage = await createMessage(messageData);
     if(newMessage){
         return res.status(200).send({status: 'done', message: 'Message created'});
     } else {
@@ -28,4 +41,4 @@ router.post('/', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

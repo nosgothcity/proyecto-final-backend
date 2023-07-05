@@ -1,9 +1,73 @@
-const express = require('express');
-const router = express.Router();
-const io = require('socket.io')();
+import { Router } from 'express';
+import UserModel from '../models/user.model.js';
+import ProductModel from '../models/products.model.js';
+import passport from 'passport';
 
-const ProductsManagerMongo = require('../dao/controllers/products');
-const productsManagerMongo = new ProductsManagerMongo();
+const router = Router();
+
+const getProducts = async (limit, page, sort, dataQuery) => {
+    try {
+        const options = {
+            page,
+            limit,
+            sort,
+            customLabels: {
+                docs: 'payload',
+            },
+            lean: true,
+            leanWithId: true,
+        };
+        const products = await ProductModel.paginate(dataQuery, options);
+        return products;
+    } catch (error) {
+        console.error('Error al obtener los productos:', error);
+        throw error;
+    }
+};
+
+const getProductsByParameter = async parameter => {
+    const product = await ProductModel.findOne(parameter).lean()
+        .catch(err => {
+            console.log('Producto no encontrado');
+            return false;
+        });
+    return product;
+};
+
+const createProduct = async product => {
+    const result = await ProductModel.create(product);
+    return result;
+};
+
+const deleteProduct = async id => {
+    const deleteProduct = await ProductModel.findByIdAndRemove(id)
+        .then(response => {
+            console.log('Producto eliminado');
+            return true;
+        })
+        .catch(err => {
+            console.log('Producto no encontrado');
+            return false;
+        });
+    return deleteProduct;
+};
+
+const updateProduct = async (id, data) => {
+    const updateProduct = await ProductModel.findByIdAndUpdate(id, data, { new: true })
+        .then(response => {
+            console.log('Producto actualizado');
+            return true;
+        })
+        .catch(err => {
+            console.log('Producto no encontrado');
+            return false;
+        });
+    return updateProduct;
+};
+
+/**
+ * ROUTERS
+ */
 
 router.get('/', async (req, res) => {
     const limit = req.query.limit??10;
@@ -31,7 +95,7 @@ router.get('/', async (req, res) => {
         queryData = {};
     }
 
-    const products = await productsManagerMongo.getProducts(limit, page, sortType, queryData);
+    const products = await getProducts(limit, page, sortType, queryData);
     if(products.payload.length > 0){
         products.status = 'success';
         if(products.prevPage){
@@ -49,21 +113,8 @@ router.get('/', async (req, res) => {
     return res.status(200).send(products);
 });
 
-router.get('/:pid', async (req, res) => {
-    const productId = req.params.pid;
-    if(!productId){
-        return res.status(400).send({status: 'error', message: 'Invalid parameter...'});
-    }
-
-    const product = await productsManagerMongo.getProductsByParameter({_id: `${productId}`});
-    if(product){
-        return res.send(product);
-    } else {
-        return res.status(400).send({status: 'error', message: 'service not available'});
-    }
-});
-
 router.post('/', async (req, res) => {
+    console.log(req.body);
     const newProduct = req.body;
     const product = [];
     const title = newProduct?.title??'';
@@ -88,13 +139,29 @@ router.post('/', async (req, res) => {
         thumbnail   : newProduct.thumbnail??'none',
     });
 
-    const checkProduct = await productsManagerMongo.getProductsByParameter({code: `${code}`});
+    const checkProduct = await getProductsByParameter({code: `${code}`});
 
     if(!checkProduct){
-        productsManagerMongo.createProduct(product);
-        res.status(200).send({ success: "Product created" });
+        const result = await createProduct(product);
+        const productId = result[0]._id.toString();
+        res.status(200).send({ success: "Product created", status: 'done', productId });
     } else {
         return res.status(400).send({ error: "Product already exist..." });
+    }
+});
+
+router.delete('/:pid', async (req, res) => {
+    const id = req.params.pid;
+    if(!id){
+        return res.status(400).send({status: 'error', message: 'Product Id not valid'});
+    }
+
+    const response = await deleteProduct(id);
+
+    if(response){
+        return res.status(200).send({status: 'done', message: 'Product deleted'});
+    } else {
+        return res.status(400).send({status: 'error', message: 'Product not found'});
     }
 });
 
@@ -105,7 +172,7 @@ router.put('/:pid', async (req, res) => {
     if(!id){
         return res.status(400).send({status: 'error', message: 'Product Id not valid'});
     }
-    const response = await productsManagerMongo.updateProduct(id, data);
+    const response = await updateProduct(id, data);
 
     if(response){
         return res.status(200).send({status: 'done', message: 'Product updated'});
@@ -114,19 +181,4 @@ router.put('/:pid', async (req, res) => {
     }
 });
 
-router.delete('/:pid', async (req, res) => {
-    const id = req.params.pid;
-    if(!id){
-        return res.status(400).send({status: 'error', message: 'Product Id not valid'});
-    }
-
-    const response = await productsManagerMongo.deleteProduct(id);
-
-    if(response){
-        return res.status(200).send({status: 'done', message: 'Product deleted'});
-    } else {
-        return res.status(400).send({status: 'error', message: 'Product not found'});
-    }
-});
-
-module.exports = router;
+export default router;

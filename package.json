@@ -1,9 +1,9 @@
 {
-  "name": "desafio-3",
+  "name": "handsonlabpaginate19",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "start": "nodemon src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,16 +12,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.0",
+    "connect-flash": "^0.1.1",
     "connect-mongo": "^5.0.0",
-    "express": "^4.18.2",
-    "express-handlebars": "^7.0.7",
+    "express": "^4.18.1",
+    "express-handlebars": "^6.0.6",
     "express-session": "^1.17.3",
-    "mongoose": "^7.2.0",
+    "mongoose": "^6.4.4",
     "mongoose-paginate-v2": "^1.7.1",
-    "socket.io": "^4.6.1",
-    "socket.io-client": "^4.6.1"
-  },
-  "devDependencies": {
-    "handlebars": "^4.5.0"
+    "passport": "^0.6.0",
+    "passport-github2": "^0.1.12",
+    "passport-local": "^1.0.0",
+    "socket.io": "^4.7.1"
   }
 }

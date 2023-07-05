@@ -1,9 +1,56 @@
-const Router = require('express');
+import { Router } from 'express';
+import CartsModel from '../models/carts.model.js';
+import ProductModel from '../models/products.model.js';
+
 const router = Router();
-const CartManager = require('../dao/controllers/carts');
-const ProductsManagerMongo = require('../dao/controllers/products');
-const cartsManager = new CartManager();
-const productsManagerMongo = new ProductsManagerMongo();
+
+const createCart = async data => {
+    const result = await CartsModel.create(data)
+    .then(response => {
+        console.log('Carro creado');
+        return true;
+    })
+    .catch(err => {
+        console.log('Carro no creado');
+        return false;
+    });
+    return result;
+};
+
+const getCartById = async cartId => {
+    const product = await CartsModel.findById(cartId).populate('products.product').lean()
+        .catch(err => {
+            console.log('Carro no encontrado');
+            return false;
+        });
+    return product;
+};
+
+const updateProductToCart = async (id, data) => {
+    const updateCart = await CartsModel.findByIdAndUpdate(id, data, { new: true })
+        .then(response => {
+            console.log('Carro actualizado');
+            return true;
+        })
+        .catch(err => {
+            console.log('Carro no encontrado');
+            return false;
+        });
+    return updateCart;
+};
+
+const getProductsByParameter = async parameter => {
+    const product = await ProductModel.findOne(parameter).lean()
+        .catch(err => {
+            console.log('Producto no encontrado');
+            return false;
+        });
+    return product;
+};
+
+/**
+ * ROUTERS
+ */
 
 router.get('/:pid', async (req, res) => {
     const cartId = req.params.pid;
@@ -11,7 +58,7 @@ router.get('/:pid', async (req, res) => {
         return res.status(400).send({status: 'error', message: 'CartId not valid'});
     }
 
-    const cartData = await cartsManager.getCartById(cartId);
+    const cartData = await getCartById(cartId);
     if(cartData){
         return res.send(cartData);
     } else {
@@ -37,7 +84,7 @@ router.post('/', async (req, res) => {
         addProduct.products = products;
     }
 
-    const response = await cartsManager.createCart(addProduct);
+    const response = await createCart(addProduct);
 
     if(response){
         return res.status(200).send({status: 'done', message: 'Cart created'});
@@ -57,8 +104,8 @@ router.put('/:cid/product/:pid', async (req, res) => {
         date,
     };
 
-    const cartData = await cartsManager.getCartById(cartId);
-    const productData = await productsManagerMongo.getProductsByParameter({_id: `${productId}`});
+    const cartData = await getCartById(cartId);
+    const productData = await getProductsByParameter({_id: `${productId}`});
 
     if(!cartData || !productData){
         return res.status(400).send({status: 'error', message: 'CartId/ProductId not found'});
@@ -83,7 +130,7 @@ router.put('/:cid/product/:pid', async (req, res) => {
     });
 
     addProduct.products = products;
-    const response = await cartsManager.updateProductToCart(cartId, addProduct);
+    const response = await updateProductToCart(cartId, addProduct);
 
     if(response){
         return res.status(200).send({status: 'done', message: 'Cart updated'});
@@ -102,8 +149,8 @@ router.delete('/:cid/product/:pid', async (req, res) => {
         date,
     };
 
-    const cartData = await cartsManager.getCartById(cartId);
-    const productData = await productsManagerMongo.getProductsByParameter({_id: `${productId}`});
+    const cartData = await getCartById(cartId);
+    const productData = await getProductsByParameter({_id: `${productId}`});
 
     if(!cartData || !productData){
         return res.status(400).send({status: 'error', message: 'CartId/ProductId not found'});
@@ -126,7 +173,7 @@ router.delete('/:cid/product/:pid', async (req, res) => {
     }
 
     addProduct.products = products;
-    const response = await cartsManager.updateProductToCart(cartId, addProduct);
+    const response = await updateProductToCart(cartId, addProduct);
 
     if(response){
         return res.status(200).send({status: 'done', message: 'Cart updated'});
@@ -144,14 +191,14 @@ router.delete('/:cid', async (req, res) => {
         date,
     };
 
-    const cartData = await cartsManager.getCartById(cartId);
+    const cartData = await getCartById(cartId);
 
     if(!cartData){
         return res.status(400).send({status: 'error', message: 'CartId not found'});
     }
 
     addProduct.products = products;
-    const response = await cartsManager.updateProductToCart(cartId, addProduct);
+    const response = await updateProductToCart(cartId, addProduct);
 
     if(response){
         return res.status(200).send({status: 'done', message: 'Removed all products from cart'});
@@ -160,4 +207,4 @@ router.delete('/:cid', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

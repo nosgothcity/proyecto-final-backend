@@ -1,8 +1,5 @@
-const mongoose = require('mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2');
-const dataBaseConnect = require('./db');
-
-const collection = 'Products';
+import mongoose from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
 
 const schema = new mongoose.Schema({
     title: {
@@ -40,17 +37,6 @@ const schema = new mongoose.Schema({
 });
 
 schema.plugin(mongoosePaginate);
-schema.statics.createProduct = async function (product, req) {
-    try {
-        const newProduct = new this(product);
-        const result = await newProduct.save();
-        return result;
-    } catch (error) {
-        console.error('Error al crear usuario:', error);
-        throw error;
-    }
-};
+const productsModel = mongoose.model('Products', schema);
 
-const productsModel = dataBaseConnect.model(collection, schema);
-
-module.exports = productsModel;
+export default productsModel;
