@@ -2,13 +2,14 @@ import passport from 'passport';
 import GitHubStrategy from 'passport-github2';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { createHash, isValidPassword } from '../utils.js';
-import UserModel from '../models/user.model.js';
+import UserModel from '../models/schemas/user.schemas.js';
+import config from './config.js';
 
 const initializePassport = () => {
     passport.use('github', new GitHubStrategy({
-        clientID:'Iv1.f575c2538022b7b3',
-        clientSecret:'88f403d5bba84d5ee876b0e088b401f6bb214c24',
-        callbackURL:'http://localhost:8080/api/sessions/githubcallback',
+        clientID: config.passport.clientID,
+        clientSecret: config.passport.clientSecret,
+        callbackURL: config.passport.callbackURL,
     },
         async (accessToken, refreshToken, profile, done) => {
             try {

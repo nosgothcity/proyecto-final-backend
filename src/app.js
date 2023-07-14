@@ -7,6 +7,7 @@ import passport from 'passport';
 import initializePassport from './config/passport.config.js'
 import flash from 'connect-flash';
 import { Server } from 'socket.io';
+import config from './config/config.js';
 
 import viewsRouter from './routes/views.router.js';
 import sessionsRouter from './routes/session.router.js';
@@ -15,8 +16,6 @@ import chatRouter from './routes/chat.router.js';
 import cartsRouter from './routes/carts.router.js';
 
 const app = express();
-
-mongoose.connect(`mongodb+srv://coderhouse:coderhouse316@ecommerce.ovm7ngz.mongodb.net/?retryWrites=true&w=majority`, { dbName: 'ecommerce' });
 app.engine('handlebars', handlebars.engine());
 
 app.use(express.static(__dirname + '/public'));
@@ -43,7 +42,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/chat', chatRouter);
 
-const server = app.listen(8080, () => console.log(`Listening on PORT 8080`));
+const server = app.listen(config.port, () => console.log(`Listening on PORT ${config.port}`));
 
 const io = new Server(server);
 const messages = [];
