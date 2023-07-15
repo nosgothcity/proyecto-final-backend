@@ -1,25 +1,9 @@
 import { Router } from 'express';
 import passport from 'passport';
 import { renderViews, renderLogin, validateProfile, logout, getProducts } from '../controller/views.js';
+import { privateRoute, publicRoute } from '../controller/restricted.routes.js';
 
 const router = Router();
-
-// Middleware para validar rutas privadas y publicas
-const privateRoute = (req, res, next) => {
-    if (req.session.user) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-};
-
-const publicRoute = (req, res, next) => {
-    if (!req.session.user) {
-        next();
-    } else {
-        res.redirect('/profile');
-    }
-};
 
 router.get('/', publicRoute, renderViews);
 

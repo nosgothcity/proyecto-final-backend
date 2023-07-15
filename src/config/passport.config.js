@@ -22,7 +22,7 @@ const initializePassport = () => {
                         email: profile._json.email, 
                         age: 30,
                         password: '',
-                        admin: false,
+                        role: 'user',
                     };
                     const result = await UserModel.create(newUser);
                     done(null, result);
@@ -44,9 +44,9 @@ const initializePassport = () => {
                 if (user) {
                     return done(null, false, { message: 'Correo electrónico incorrecto.' });
                 }
-                let admin = false;
+                let role = 'user';
                 if(username === 'adminCoder@coder.com'){
-                    admin = true;
+                    role = 'admin';
                     console.log('El usuario es admin....');
                 }
                 const newUser = {
@@ -55,7 +55,7 @@ const initializePassport = () => {
                     email: username, 
                     age, 
                     password: createHash(password),
-                    admin,
+                    role,
                 };
 
                 const result = await UserModel.create(newUser);

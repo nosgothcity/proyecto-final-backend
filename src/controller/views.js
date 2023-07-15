@@ -29,6 +29,7 @@ const getProducts = async (req, res) => {
     const page = req.query.page??1;
     const query = req.query.query??null;
     const sort = req.query.sort??null;
+    let checkAdmin = false;
     let sortType;
     let queryData;
 
@@ -65,6 +66,10 @@ const getProducts = async (req, res) => {
         products.nextPage = null;
     }
 
+    if(req.session.user.role === 'admin'){
+        checkAdmin = true;
+    }
+ 
     res.render('productsList', {
         products: products.payload,
         hasNextPage: products.hasNextPage,
@@ -72,7 +77,7 @@ const getProducts = async (req, res) => {
         nextPage: products.nextPage,
         prevPage: products.prevPage,
         username: req.session.user.firstname,
-        is_admin: req.session.user.admin,
+        is_admin: checkAdmin,
     });
 };
 

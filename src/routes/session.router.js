@@ -1,15 +1,8 @@
 import { Router } from 'express';
 import passport from 'passport';
+import { privateRoute } from '../controller/restricted.routes.js';
 
 const router = Router();
-
-const privateRoute = (req, res, next) => {
-    if (req.session.user) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-};
 
 router.get('/github', passport.authenticate('github', {scope: ['user:email']}), async (req, res) => {});
 
