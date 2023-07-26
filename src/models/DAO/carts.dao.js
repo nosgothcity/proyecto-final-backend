@@ -41,6 +41,18 @@ class cartsDao {
         return updateCart;
     };
 
-}
+    modelDeleteCompleteCart = async cartId => {
+        const deleteCompleteCart = await CartsModel.findByIdAndRemove(cartId)
+            .then(response => {
+                console.log('Carro eliminado');
+                return true;
+            })
+            .catch(err => {
+                console.log('Carro no eliminado');
+                return false;
+            });
+        return deleteCompleteCart;
+    };
+};
 
 export default cartsDao;

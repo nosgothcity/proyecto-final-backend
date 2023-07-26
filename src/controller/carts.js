@@ -1,8 +1,11 @@
+import { v4 as uuidv4 } from 'uuid';
 import CartsDaoMongo from '../models/DAO/carts.dao.js';
 import ProductDaoMongo from '../models/DAO/products.dao.js';
+import TicketDaoMongo from '../models/DAO/ticket.dao.js';
 
 const cartsDb = new CartsDaoMongo();
 const productsDb = new ProductDaoMongo();
+const ticketDb = new TicketDaoMongo();
 
 const getCartById = async (req, res) => {
     const cartId = req.params.pid;
@@ -73,13 +76,25 @@ const addProductToCart = async (req, res) => {
                 product: product.product._id.toString(),
                 count: product.count,
             });
-        }    
+        }
     }
 
-    products.push({
-        product: productId,
-        count,
-    });
+    if(products.length > 0){
+        const checkProduct = products.findIndex(element => element.product === productId);
+        if(checkProduct >= 0){
+            products[checkProduct].count += count;
+        } else {
+            products.push({
+                product: productId,
+                count,
+            });
+        }
+    } else {
+        products.push({
+            product: productId,
+            count,
+        });
+    }
 
     addProduct.products = products;
     const response = await cartsDb.modelUpdateProductToCart(cartId, addProduct);
@@ -173,24 +188,54 @@ const purchaseCart = async (req, res) => {
     productInCart.push(... cartData.products);
 
     if(productInCart.length > 0){
-        // for (const datum of productInCart) {
-        //     const checkProduct = productToBuy.find(element => element.code === datum.product.code);
-        //     if(checkProduct){
+        for (const datum of productInCart) {
+            const productStock = datum.product.stock;
+            const productCount = datum.count;
 
-        //     }
-        // }
+            if(productStock && productStock > 0 && productStock >= productCount){
+                const newStock = productStock - productCount;
+                await productsDb.modelUpdateProduct(datum.product._id.toString(), {stock: newStock});
+                productToBuy.push(datum);
+            } else {
+                productsWithoutStock.push({
+                    product: datum.product._id.toString(),
+                    count: datum.count,
+                });
+            }
+        }
+    } else {
+        return res.status(400).send({status: 'error', message: 'cart without products'});
     }
 
-    // for (const datum of productInCart) {
-    //     const productCode = datum.product.code;
-    //     const checkProduct = await productsDb.modelGetProductsByParameter({code: `${productCode}`});
-    //     let productStock = checkProduct.product.stock??null;
-    //     if(productStock && productStock > 0){
-    //         productStock--;
-    //         await productsDb.modelUpdateProduct(checkProduct.product._id, {stock: productStock});
-    //         productToBuy.push();
-    //     }
-    // }
+    if(productToBuy.length > 0){
+        let total = 0;
+        for (const datum of productToBuy) {
+            const price = datum.product.price;
+            const count = datum.count;
+            const productPriceTotal = price*count;
+            total += productPriceTotal;
+        }
+        const uId = uuidv4();
+        const newTicket = [{
+            code: uId,
+            purchase_datetime: new Date().toISOString().replace('T', ' ').split('.')[0],
+            amount: total,
+            purchaser: 'test@gmail.com',
+        }];
+        const response = await ticketDb.modelCreateTicket(newTicket);
+    }
+
+    if(productsWithoutStock.length > 0){
+        const addProduct = {
+            products: productsWithoutStock,
+            date: new Date().toISOString().split('T')[0],
+        };
+        const response = await cartsDb.modelUpdateProductToCart(cartId, addProduct);
+    } else {
+        const response = await cartsDb.modelDeleteCompleteCart(cartId);
+    }
+
+    return res.status(200).send({status: 'done', message: 'Ticket creado.'});
 };
 
 export {
