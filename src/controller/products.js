@@ -46,6 +46,17 @@ const getProducts = async (req, res) => {
     return res.status(200).send(products);
 };
 
+const getProductByCode = async (req, res) => {
+    const code = req.params.pcode;
+    const checkProduct = await productsDb.modelGetProductsByParameter({code: `${code}`});
+
+    if(!checkProduct){
+        res.status(400).send({ success: "Product not found", status: 'not-found'});
+    } else {
+        return res.status(200).send({ product: checkProduct });
+    }
+};
+
 const createProducts = async (req, res) => {
     const newProduct = req.body;
     const product = [];
@@ -118,4 +129,5 @@ export {
     createProducts,
     deleteProduct,
     updateProduct,
+    getProductByCode,
 };

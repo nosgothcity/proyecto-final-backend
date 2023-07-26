@@ -159,10 +159,45 @@ const deleteCart = async (req, res) => {
     }
 };
 
+const purchaseCart = async (req, res) => {
+    const cartId = req.params.cid;
+    const cartData = await cartsDb.modelGetCartById(cartId);
+    const productInCart = [];
+    const productToBuy = [];
+    const productsWithoutStock = [];
+
+    if(!cartData){
+        return res.status(400).send({status: 'error', message: 'CartId not found'});
+    }
+
+    productInCart.push(... cartData.products);
+
+    if(productInCart.length > 0){
+        // for (const datum of productInCart) {
+        //     const checkProduct = productToBuy.find(element => element.code === datum.product.code);
+        //     if(checkProduct){
+
+        //     }
+        // }
+    }
+
+    // for (const datum of productInCart) {
+    //     const productCode = datum.product.code;
+    //     const checkProduct = await productsDb.modelGetProductsByParameter({code: `${productCode}`});
+    //     let productStock = checkProduct.product.stock??null;
+    //     if(productStock && productStock > 0){
+    //         productStock--;
+    //         await productsDb.modelUpdateProduct(checkProduct.product._id, {stock: productStock});
+    //         productToBuy.push();
+    //     }
+    // }
+};
+
 export {
     getCartById,
     createCart,
     addProductToCart,
     deleteProductFromCart,
     deleteCart,
+    purchaseCart,
 };

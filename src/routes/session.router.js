@@ -13,7 +13,7 @@ router.get('/githubcallback', passport.authenticate('github', {failureRedirect: 
 
 router.get('/current', privateRoute, (req, res) => {
     if (!req.session.user) {
-        return res.status(404).send({message: 'not logged in'});
+        return res.status(401).send({message: 'not logged in'});
     } else {
         const { firstname, lastname, email, age } = req.session.user;
         return res.status(200).send({firstname, lastname, email});
